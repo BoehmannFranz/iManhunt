@@ -17,10 +17,8 @@ iManhunt simuliert Fluchtbewegungen in einer fiktiven 3D-Stadt. Auf Basis eines 
 9. [Evaluation & Metriken](#evaluation--metriken)  
 10. [Projektstruktur (Repo-Layout)](#projektstruktur-repo-layout)  
 11. [Konfiguration (Beispiel)](#konfiguration-beispiel)  
-12. [Roadmap & Meilensteine](#roadmap--meilensteine)  
-13. [Nicht-Ziele & Grenzen](#nicht-ziele--grenzen)  
-14. [Lizenz & Nutzung](#lizenz--nutzung)
-
+12. [iManhunt – Roadmap & Meilensteine](#iManhunt–Roadmap&Meilensteine)
+13. [MVP-Abschlusskriterien](#MVP-Abschlusskriterien)
 ---
 
 ## Zielbild & Scope
