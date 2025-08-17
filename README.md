@@ -179,6 +179,7 @@ Ein lauffähiger End-to-End-Pfad: synthetische Stadt → 5 Profile → kurze RL-
 ---
 
 ## Projektstruktur (Repo-Layout)
+```bash
 escape_flow/
 ├─ cfg/
 │ ├─ demo.json
@@ -204,7 +205,7 @@ escape_flow/
 │ └─ README_methods.md
 └─ main.py
 
-
+```
 ---
 
 ## Konfiguration (Beispiel)
