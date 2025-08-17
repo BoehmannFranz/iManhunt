@@ -1,7 +1,7 @@
 # iManhunt
 iManhunt simuliert Fluchtbewegungen in einer fiktiven 3D-Stadt. Auf Basis eines Straßengraphen, Topografie und Checkpoints lernen RL-Profile mit unterschiedlichen Traits (Alter, Impulsivität, Gesundheit etc.). Resultat: zeitabhängige Heatmaps, fünf Routen, Antreffwahrscheinlichkeiten und optimierte Kontrollpunkte.
 
-> **Hinweis & Ethik**: Dieses Projekt ist ein **rein fiktionaler** Methoden-Demonstrator für städtische **Bewegungs- und Risiko­simulationen**. Es dient **nicht** der Unterstützung realer Flucht- oder Ausweich­strategien. Keine realen Daten, Personen oder Orte; kein operativer Einsatz. Nutzen: Forschung, Lehre, Analytics-Prototyping (z. B. Krisen-/Evakuierungs­simulation, Crowd Dynamics).
+> **Hinweis & Ethik**: Dieses Projekt ist ein **rein fiktionales** Ideation-Projekt für städtische **Bewegungs- und Risiko­simulationen**. 
 
 ---
 
@@ -37,8 +37,7 @@ Ein Akteur (fiktional) entkommt aus einem fixen Startpunkt in einer synthetische
 - **Checkpoint-Analysen** (Ranking, Zeitreihen),
 - reproducible **Konfigurations- und Ergebnisdateien** (GeoJSON/CSV/MP4/HTML).
 
-**Zielgruppe**: Forschung/Lehre, Data-Science-Prototyping, RL/Graph-Analytics-Demos.  
-**Nicht-Ziel**: reale Einsatzplanung, reale Personen, reale Städte.
+
 
 ---
 
@@ -157,3 +156,134 @@ Ein lauffähiger End-to-End-Pfad: synthetische Stadt → 5 Profile → kurze RL-
 - `w_detect = w0 * (1 − risk)`; `w_slope = w0 * (topo + (1 − health))`.
 
 **Reward (pro Schritt)**  
+
+**Begegnungswahrscheinlichkeit**  
+- Momentan: `q_i(t) = s_i * Σ_{v∈B(r_i)} p_t(v)`  
+- In Δt (näherungsweise unabhängig): `P_enc(t,Δt) = 1 − ∏_i (1 − q_i(t))`
+
+---
+
+## Visualisierung (2/3D)
+
+- **2D**: Basemap (synthetisch), Heatmaps *pₜ*, Kantenfärbung, Zeit-Slider.  
+- **3D**: Extrudierte Gebäude, Trails (5 Farben, Fade), Checkpoints (Tooltips), kurzer Kameraflug (MP4/HTML).
+
+---
+
+## Evaluation & Metriken
+
+- **Routen-Diversität**: Entropie, Jensen–Shannon-Divergenz zw. Profil-Heatmaps.  
+- **Korridor-Score**: aggregierte Durchtrittswahrscheinlichkeit je Segment.  
+- **Checkpoint-Effektivität**: ΔP_enc bei Platzierungsänderung.  
+- **Sensitivität**: Variation einzelner Traits → Hotspot-Verschiebungen.  
+- **Reproduzierbarkeit**: Seeds, deterministische Batches.
+
+---
+
+## Projektstruktur (Repo-Layout)
+escape_flow/
+├─ cfg/
+│ ├─ demo.json
+│ └─ profiles/*.json
+├─ data/
+│ └─ synth_city_small/
+├─ sim/
+│ ├─ graph_build.py
+│ ├─ traits.py
+│ ├─ reward.py
+│ ├─ env.py
+│ ├─ train.py
+│ ├─ rollout.py
+│ ├─ probmap.py
+│ └─ checkpoints.py
+├─ viz/
+│ ├─ heatmap_2d.py
+│ ├─ trails_3d.py
+│ └─ export.py
+├─ notebooks/
+│ └─ 01_mvp_demo.ipynb
+├─ docs/
+│ └─ README_methods.md
+└─ main.py
+
+
+---
+
+## Konfiguration (Beispiel)
+
+```json
+{
+  "global": {
+    "start_time": "2025-08-17T08:00:00",
+    "horizon_min": 240,
+    "dt_min": 2,
+    "city_preset": "grid_small",
+    "checkpoints": [
+      {"name": "C1", "x": 10, "y": 30, "radius_m": 120, "sensitivity": 0.6},
+      {"name": "C2", "x": 35, "y": 40, "radius_m": 160, "sensitivity": 0.5}
+    ],
+    "seed": 42
+  },
+  "profile_sampler": {
+    "age":    {"dist": "triangular", "min": 20, "mode": 35, "max": 60},
+    "imp":    {"dist": "beta", "a": 2, "b": 5},
+    "plan":   {"dist": "beta", "a": 4, "b": 2},
+    "health": {"dist": "beta", "a": 3, "b": 2},
+    "topo":   {"dist": "beta", "a": 3, "b": 3},
+    "risk":   {"dist": "beta", "a": 3, "b": 3},
+    "add":    {"dist": "normal", "mu": 0.0, "sigma": 0.4, "clip": [-1, 1]},
+    "fam":    {"dist": "normal", "mu": 0.0, "sigma": 0.6, "clip": [-1, 1]},
+    "mot":    {"dist": "categorical", "p": {"exit_city": 0.5, "hide_urban": 0.3, "water_edge": 0.2}},
+    "n_profiles": 5
+  },
+  "rl": {
+    "algo": "PPO",
+    "episodes": 200,
+    "max_steps_per_ep": 600,
+    "early_stop_patience": 10
+  }
+}
+````
+# iManhunt – Roadmap & Meilensteine
+
+## Roadmap (SP1–SP10)
+
+- **SP1 – Graph & Attribute**  
+  Synthetischer Straßengraph, Kantenlängen/-typen, Steigung, Geschwindigkeit, Reisedauer (τ).
+
+- **SP2 – Trait-Sampler & Mapping**  
+  Sampling von Traits (Alter, Impulsivität, Gesundheit, etc.) → Mapping auf γ, α_ent, w_*, v_max.
+
+- **SP3 – Reward-Composer (Basis)**  
+  Komponierbares Reward-System (Distanz, Zeit, Steigung, Risiko, Zielpotenzial, Ermüdung) mit Caps.
+
+- **SP4 – RL-Env + kurzes PPO-Training**  
+  Gym-Environment (State/Action/Step), Stable-Baselines3 PPO, kurze Episoden.
+
+- **SP5 – Rollouts & pₜ-Aggregation**  
+  Monte-Carlo-Trajektorien je Profil; zeitliche Positionsverteilungen pₜ berechnen.
+
+- **SP6 – Checkpoint-Analyse**  
+  qᵢ(t), kumulatives P_enc(t), Ranking der Checkpoints, Isochronen.
+
+- **SP7 – 2D-Heatmaps (HTML/PNG)**  
+  Interaktive Heatmaps pro Zeitfenster & Profil; Kantenfärbung optional.
+
+- **SP8 – 3D-Trails (MP4/HTML)**  
+  Extrudierte Stadt, farbcodierte Trails (5 Profile), Zeit-Fade, Kameraflug.
+
+- **SP9 – CLI & Config-Validierung**  
+  JSON-Konfiguration, Konsistenzchecks, One-Command-Run.
+
+- **SP10 – Evaluation & Docs (Notebook + README)**  
+  Metriken, Sensitivitäten, reproduzierbares Demo-Notebook, Doku.
+
+---
+
+## MVP-Abschlusskriterien (Zusammenfassung)
+
+- [ ] Reproduzierbarer Lauf (Seed)
+- [ ] 5 Profile mit klar unterscheidbaren Routenfeldern
+- [ ] Heatmaps & 3D-Trails exportiert
+- [ ] Checkpoint-Zeitreihen inkl. kumulativem P_enc
+- [ ] Reports/Exporte (CSV/GeoJSON/HTML/MP4) generiert
